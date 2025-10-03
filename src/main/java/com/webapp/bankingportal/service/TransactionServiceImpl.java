@@ -35,6 +35,9 @@ public class TransactionServiceImpl implements TransactionService {
         return transactionDTOs;
     }
     public void sendBankStatementByEmail(String accountNumber) {
+        if (accountNumber == null || accountNumber.trim().isEmpty()) {
+            throw new IllegalArgumentException("Account number must not be null or empty");
+        }
         List<TransactionDTO> transactions = getAllTransactionsByAccountNumber(accountNumber);
 
         StringBuilder sb = new StringBuilder();
@@ -47,9 +50,12 @@ public class TransactionServiceImpl implements TransactionService {
                     .append("\n");
         }
 
-        String email = accountRepository.findByAccountNumber(accountNumber)
-                .getUser()
-                .getEmail();
+        val account = accountRepository.findByAccountNumber(accountNumber);
+        if (account == null || account.getUser() == null) {
+            // Optionally log or handle the error here
+            return;
+        }
+        String email = account.getUser().getEmail();
 
         emailService.sendEmail(email, "Your Bank Statement", sb.toString());
     }
